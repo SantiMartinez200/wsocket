@@ -30,7 +30,7 @@
 			<input type="text" name="chat-user" id="chat-user" placeholder="Name" class="chat-input" required value="username"/>
 			<input type="text" name="chat-message" id="chat-message" placeholder="Message"  class="chat-input chat-message" required />
 			<input type="submit" id="btnSend" name="send-chat-message" value="Send" >
-			<button type="button" id="btnAsk" name="send-chat-message">Generar peticion (en chat)</button>
+			<!-- <button type="button" id="btnAsk" name="send-chat-message">Generar peticion (en chat)</button> -->
 		</form>
 </body>
 
@@ -56,6 +56,20 @@
 			const websocket = new WebSocket(`ws://localhost:8090/php-socket.php?userId=${userId}&userType=${userType}`);
 
 			
+			function replyTo(){
+					let btns = document.querySelectorAll('.reply.btn.btn-outline-success');
+					
+					btns.forEach(btn => {
+						btn.addEventListener('click',(event)=>{
+							let btnUserData = btn.dataset.id;
+							let btnOperData = btn.dataset.operator; //definitivamnete hay que reformar esto
+							chat_operator_id = userId;
+							chat_user_id = btnUserData;
+							
+							showMessage("<div class='chat-connection-ack'>Replying to: " + `${chat_user_id}` +"</div>");
+						});
+					});
+				}
 
 			websocket.onopen = function (event) {
 			   const metadata = {
@@ -72,6 +86,9 @@
 		        const Data = JSON.parse(event.data);
 		        showMessage("<div class='" + Data.message_type + "'>" + Data.message + "</div>");
 		        document.getElementById("chat-message").value = "";
+				alert('msg recibido');
+				console.log(Data.message);
+				replyTo();
 		    };
 		
 		    websocket.onerror = function (event) {
@@ -89,11 +106,12 @@
 		        chatUser.type = "hidden";
 			
 		        const messageJSON = {
+					chat_userType: "user",
 		            chat_user: chatUser.value,
 					chat_user_id: chat_user_id,
 		            chat_message: document.getElementById("chat-message").value
 		        };
-				console.log(messageJSON);
+				//console.log(messageJSON);
 				
 		        websocket.send(JSON.stringify(messageJSON));
 		    });
@@ -104,6 +122,7 @@
 				const chatUser = document.getElementById("chat-user");
 				chatUser.type = "hidden";
 				const messageJSON = {
+					chat_userType: "user",
 					chat_user: chatUser.value,
 					chat_user_id: chat_user_id,
 					chat_ask: "Esto es una peticion"

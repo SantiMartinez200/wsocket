@@ -1,6 +1,7 @@
 <?php
 class Handler {
     private $clients = [];
+	public $message;
 
 	/**
 	 * Summary. Registro de los clientes conectados en memoria mientras corra el servidor websocket.
@@ -77,13 +78,10 @@ class Handler {
     }
 
 	/**
-	 * Summary. Envia un mensaje a todos los clientes conectados.
+	 * Summary. Envia un mensaje a todos los operadores conectados.
 	 * @param $message: Mensaje a enviar.
-	 * @param bool $receptor (A modo de prueba y opcional), si es true, se envia el mensaje a "operadores".
-	 * Esto para simular que la solicitud no debe ir a usuarios clientes (en nuestro caso, vendedores).
-	 * Porque, en cualquier tenant, el vendedor no acepta la solicitud, sinó el operador con permisos para ello.
-	 */
-	function send($message, $receptor = null) {
+	*/
+	function send($message) {
 		global $clientSocketArray;
 		$clients = $this->getClients();
 		$messageLength = strlen($message);
@@ -114,7 +112,7 @@ class Handler {
 	}
 
 	/**
-	 * Summary. Envia un mensaje a todos.
+	 * Summary. Envia un mensaje a todos. (operadores y clientes, en mi caso)
 	 * @param $message: Mensaje a enviar.
 	 */
 	function sendToAll($message) {
@@ -134,14 +132,13 @@ class Handler {
 	 * Summary. Envia un mensaje a todos los operadores conectados (test)
 	 * @param $message: Mensaje a enviar.
 	 */
-	function sendToOpers($message) {
-	
-		$clientArr = $this->getClients();
-		foreach($clientArr as $client)
-		{
-			if ($client['user_type'] === 'operator') {				
-				@socket_write($client['socket'],$message);
-			}
+	function sendToMyself($message,$clientSocket) {
+		global $clientSocketArray;
+		foreach($clientSocketArray as $client){
+					if ($client == $clientSocket) {
+						@socket_write($client, $message, strlen($message));
+						break;
+					}
 		}
 		return true;
 	}
@@ -262,34 +259,38 @@ class Handler {
 		return $ACK;
 	}
 	
-
 	//esto crea mensajes... deberia ser adaptado a la solicitud de prestamo, claramente.
-	function createChatBoxMessage($chat_user,$chat_box_message,$chat_box_user_id) {
+	function createUserMessage($chat_user,$chat_box_message,$chat_box_user_id, $chat_operator_id = null){
 		$message = $chat_user . ": <div class='chat-box-message'>" . $chat_box_message . "</div>";
 		$messageArray = array('message'=>$message,'message_type'=>'chat-box-html');
 		$chatMessage = $this->seal(json_encode($messageArray));
-		//enviar mensaje a uno mismo
-		if($this->sendTo($chatMessage, $chat_box_user_id)){
-			echo "\n". "mensaje enviado a " . $chat_box_user_id . "\n";
-		}else{
-			echo "\n". "mensaje no se pudo enviar a " . $chat_box_user_id . "\n";
-		}
-		//arbitrariamente enviarlo a todos los operadores (con un identificativo para responder)
+	
 		$message = $chat_user . ": <div class='chat-box-message'>" . $chat_box_message . "
-									<button type='button'  onclick='replyTo()' class='reply btn btn-outline-success' data-id='$chat_box_user_id'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-send-fill' viewBox='0 0 16 16'>
+									<button type='button'  onclick='replyTo()' class='reply btn btn-outline-success' data-operator='$chat_operator_id' data-id='$chat_box_user_id'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-send-fill' viewBox='0 0 16 16'>
   <path d='M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471z'/>
 </svg>
 </button>
 									</div>";
 		$messageArray = array('message'=>$message,'message_type'=>'chat-box-html');
 		$chatMessage = $this->seal(json_encode($messageArray));
-		if($this->sendToOpers($chatMessage)){
-			echo "\n". "mensaje enviado a todos los operadores" . "\n";
-		}
 		
+		return $chatMessage;
 	}
 
+	//esto crea mensajes... deberia ser adaptado a la solicitud de prestamo, claramente.
+	function createOperMessage($chat_user,$chat_box_message,$chat_box_user_id){
+		$message = $chat_user . ": <div class='chat-box-message'>" . $chat_box_message . "</div>";
+		$messageArray = array('message'=>$message,'message_type'=>'chat-box-html');
+		$chatMessage = $this->seal(json_encode($messageArray));
 	
+		$message = $chat_user . ": <div class='chat-box-message'>" . $chat_box_message . "</div>";
+		$messageArray = array('message'=>$message,'message_type'=>'chat-box-html');
+		$chatMessage = $this->seal(json_encode($messageArray));
+		return $chatMessage;
+
+	}
+
+
 	//esto crea mensajes... deberia ser adaptado a la solicitud de prestamo, claramente.
 	function createChatBoxSolicitud($chat_user,$chat_box_message, $chat_box_user_id) {
 		//echo "en handler" . $chat_box_user_id . "\n";
@@ -302,6 +303,7 @@ class Handler {
 		$messageArray = array('message'=>$message,'message_type'=>'chat-box-html');
 
 		$chatMessage = $this->seal(json_encode($messageArray));
+		print_r($chatMessage);
 		return $chatMessage;
 	}
 

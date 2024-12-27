@@ -83,6 +83,20 @@ Un ejemplo de un operador que acepta o rechaza solicitudes de un cliente.
 			const userType = "operator";
 			 websocket = new WebSocket(`ws://localhost:8090/php-socket.php?userId=${userId}&userType=${userType}`);
 
+			 function replyTo(){
+					let btns = document.querySelectorAll('.reply.btn.btn-outline-success');
+					
+					btns.forEach(btn => {
+						btn.addEventListener('click',(event)=>{
+							let btnUserData = btn.dataset.id;
+							chat_operator_id = userId;
+							chat_user_id = btnUserData;
+							
+							showMessage("<div class='chat-connection-ack'>Replying to: " + `${chat_user_id}` +"</div>");
+						});
+					});
+				}
+
 			function getRandomInt(min, max) {
 			    min = Math.ceil(min);
 			    max = Math.floor(max);
@@ -108,41 +122,8 @@ Un ejemplo de un operador que acepta o rechaza solicitudes de un cliente.
 
 				let chatUser = document.getElementById("chat-user");
 		        chatUser.type = "hidden";
-
-				btnacep = document.querySelectorAll('.btnAcep')
-					console.log(btnacep);
-					
-						btnacep.forEach(b => {
-							b.addEventListener('click',(event)=>{
-								console.log('click');
-								
-								const messageJSON = {
-		        				    	chat_user: chatUser.value,
-		        				    	chat_response: 'aceptar',
-										chat_user_id: b.dataset.id
-		        				};
-		        				websocket.send(JSON.stringify(messageJSON));
-							});
-						});
-
-					btnrech = document.querySelectorAll('.btnRech')
-					console.log(btnrech);
-					
-						btnrech.forEach(b => {
-							b.addEventListener('click',(event)=>{
-								console.log('click');
-								
-								const messageJSON = {
-		        				    chat_user: chatUser.value,
-		        				    chat_response: 'rechazar',
-									chat_user_id: b.dataset.id
-		        				};
-		        				websocket.send(JSON.stringify(messageJSON));
-							});
-						});
-
-						//leer los mensajes que van apareciendo
-						replyTo();
+				//leer los mensajes que van apareciendo
+				replyTo();
 		    };
 		
 		    websocket.onerror = function (event) {
@@ -158,77 +139,27 @@ Un ejemplo de un operador que acepta o rechaza solicitudes de un cliente.
 		        event.preventDefault();
 		        let chatUser = document.getElementById("chat-user");
 		        chatUser.type = "hidden";
-				let chat_user_id;
+				//let chat_user_id;
 
 				if(typeof chat_user_id === 'undefined'){
 					chat_user_id = 'all'; //esto es arbitrario.
 				}
 			
 		        const messageJSON = {
+					chat_userType: 'operator',
 		            chat_user: chatUser.value,
+					chat_operator_id: userId,
 					chat_user_id: chat_user_id,
 		            chat_message: document.getElementById("chat-message").value
 		        };
 			
+				console.log(messageJSON);
+				
 		        websocket.send(JSON.stringify(messageJSON));
 		    });
+
+			
 		});
-				function rechazar(id){	
-					 fetch('./rechazar.php', {
-					     method: 'POST',
-					     headers: {
-					         'Content-Type': 'application/json' // Indica que los datos están en formato JSON
-					     },
-					     body: JSON.stringify({ id }) // Convierte los datos a JSON
-					 })
-					 .then(response => response.json())
-					 .then(data => {
-						if(data.success == true){
-							const messageJSON = {
-		       				     chat_user: 'superAdmin',
-		       				     chat_message: data.message,
-		       				 };
-		       				 websocket.send(JSON.stringify(messageJSON));
-						}
-						
-					 });
-				}
-
-				function aceptar(id){	
-					console.log(id);
-					fetch('./aceptar.php', {
-					     method: 'POST',
-					     headers: {
-					         'Content-Type': 'application/json' // Indica que los datos están en formato JSON
-					     },
-					     body: JSON.stringify({ id }) // Convierte los datos a JSON
-					 })
-					 .then(response => response.json())
-					 .then(data => {
-						if(data.success == true){
-							const messageJSON = {
-		       				     chat_user: 'superAdmin',
-		       				     chat_message: data.message,
-		       				 };
-		       				 websocket.send(JSON.stringify(messageJSON));
-						}
-
-					 });
-				}
-
-				function replyTo(){
-					console.log('reply');
-					let btns = document.querySelectorAll('.reply.btn.btn-outline-success');
-					console.log(btns);
-					
-					btns.forEach(btn => {
-						btn.addEventListener('click',(event)=>{
-							let btnUserData = btn.dataset.id;
-							chat_user_id = btnUserData;
-							showMessage("<div class='chat-connection-ack'>Replying to: " + `${chat_user_id}` +"</div>");
-						});
-					});
-				}
-			</script>
+	</script>
 
 </html>
