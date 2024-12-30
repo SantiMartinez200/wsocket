@@ -71,33 +71,7 @@ while ($running) {
             $socketMessage = $handler->unseal($socketData);
             $messageObj = json_decode($socketMessage);
             //Mensaje publico
-			if(isset($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id)){
-				$chat_box_message = $handler->createChatBoxMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id);
-
-				if(gettype($messageObj->chat_user_id) == 'string' && $messageObj->chat_user_id == 'all'){
-                    echo "todos";
-                    $handler->sendToAll($chat_box_message);
-                }else{
-                    echo "uno";
-                    $handler->send($chat_box_message);
-                }
-                
-				echo "Mensaje recibido: " . $chat_box_message . PHP_EOL;
-			}
-
-            //Solictud de chat (Y/N) (esto deberia usarse???)
-			if(isset($messageObj->chat_user, $messageObj->chat_ask, $messageObj->chat_user_id)){
-				$chat_box_message = $handler->createChatBoxSolicitud($messageObj->chat_user, $messageObj->chat_ask, $messageObj->chat_user_id);
-				$handler->send($chat_box_message);
-				echo "Peticion recibido: " . $chat_box_message . PHP_EOL;
-			}
-
-			///responder a un solo usuario (porque sino se lo manda a todos)
-			if(isset($messageObj->chat_user, $messageObj->chat_response, $messageObj->chat_user_id)){
-				$chat_box_message = $handler->createChatBoxMessage($messageObj->chat_user, $messageObj->chat_response);
-				$handler->sendTo($chat_box_message, $messageObj->chat_user_id);
-				echo "respuesta para ". $messageObj->chat_user_id ." recibido: " . $chat_box_message . PHP_EOL;
-			}
+			var_dump($messageObj);
 
 
         } elseif ($bytesReceived === 0 || $socketData === false) {
