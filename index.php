@@ -13,6 +13,8 @@ Un ejemplo de un operador que acepta o rechaza solicitudes de un cliente.
 	}
 	#btnSend {background: #26af26;border: #26af26 1px solid;	border-radius: 4px;color: #FFF;display: block;margin: 15px 0px;padding: 10px 50px;cursor: pointer;
 	}
+	#btnSend:disabled {background:rgb(87, 169, 87);border:rgb(87, 169, 87) 1px solid;	border-radius: 4px;color: #FFF;display: block;margin: 15px 0px;padding: 10px 50px;cursor: not-allowed;
+	}
 	#chat-box {background: #fff8f8;border: 1px solid #ffdddd;border-radius: 4px;border-bottom-left-radius:0px;border-bottom-right-radius: 0px;min-height: 300px;padding: 10px;overflow: auto;
 	}
 	.chat-box-html{color: #09F;margin: 10px 0px;font-size:0.8em;}
@@ -73,6 +75,14 @@ Un ejemplo de un operador que acepta o rechaza solicitudes de un cliente.
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 	<script>
 		var websocket;
+		var inputMessage = document.getElementById('chat-message');
+		var btnSend = document.getElementById('btnSend');
+		inputMessage.disabled = true;
+		btnSend.disabled = true;
+
+		console.log(btnSend, "btnsnd",inputMessage, "inputMessage");
+		
+
 		function showMessage(messageHTML) {
 		    const chatBox = document.getElementById("chat-box");
 		    chatBox.innerHTML += messageHTML;
@@ -160,6 +170,70 @@ Un ejemplo de un operador que acepta o rechaza solicitudes de un cliente.
 
 			
 		});
+<<<<<<< Updated upstream
 	</script>
+=======
+				function rechazar(id){	
+					 fetch('./rechazar.php', {
+					     method: 'POST',
+					     headers: {
+					         'Content-Type': 'application/json' // Indica que los datos están en formato JSON
+					     },
+					     body: JSON.stringify({ id }) // Convierte los datos a JSON
+					 })
+					 .then(response => response.json())
+					 .then(data => {
+						if(data.success == true){
+							const messageJSON = {
+		       				     chat_user: 'superAdmin',
+		       				     chat_message: data.message,
+		       				 };
+		       				 websocket.send(JSON.stringify(messageJSON));
+						}
+						
+					 });
+				}
+
+				function aceptar(id){	
+					console.log(id);
+					fetch('./aceptar.php', {
+					     method: 'POST',
+					     headers: {
+					         'Content-Type': 'application/json' // Indica que los datos están en formato JSON
+					     },
+					     body: JSON.stringify({ id }) // Convierte los datos a JSON
+					 })
+					 .then(response => response.json())
+					 .then(data => {
+						if(data.success == true){
+							const messageJSON = {
+		       				     chat_user: 'superAdmin',
+		       				     chat_message: data.message,
+		       				 };
+		       				 websocket.send(JSON.stringify(messageJSON));
+						}
+
+					 });
+				}
+
+				function replyTo(){
+					
+					let btns = document.querySelectorAll('.reply.btn.btn-outline-success');
+					
+
+					console.log(btns);
+					
+					btns.forEach(btn => {
+						btn.addEventListener('click',(event)=>{
+							inputMessage.disabled = false;
+							btnSend.disabled = false;
+							let btnUserData = btn.dataset.id;
+							chat_user_id = btnUserData;
+							showMessage("<div class='chat-connection-ack'>Replying to: " + `${chat_user_id}` +"</div>");
+						});
+					});
+				}
+			</script>
+>>>>>>> Stashed changes
 
 </html>
