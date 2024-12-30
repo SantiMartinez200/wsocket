@@ -1,0 +1,17 @@
+if(isset($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id)){
+				if(gettype($messageObj->chat_user_id) == 'string' && $messageObj->chat_user_id == 'all'){
+				    $chat_box_message = $handler->createOperMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id);
+                    $handler->sendToAll($chat_box_message);
+                }else{
+                    if(isset($messageObj->chat_operator_id)){
+                        $chat_box_message = $handler->createUserMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id, $messageObj->chat_operator_id);
+                    }else{
+                        $chat_box_message = $handler->createUserMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id);
+                    }
+                    if(isset($messageObj->chat_userType) && $messageObj->chat_userType != 'operator'){
+                        $handler->send($chat_box_message); //operador 
+                    }else{
+                        $handler->sendToMyself($chat_box_message,$clientSocket); //usuario (el mismo)
+                    }	
+                    $handler->sendTo($chat_box_message,$messageObj->chat_user_id); //usuario (el mismo)
+                }

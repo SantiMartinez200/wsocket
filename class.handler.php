@@ -45,6 +45,19 @@ class Handler {
     }
 
 	/**
+	 * Summary. Getter de los operadores conectados.
+	 */
+	public function getOpers() {
+		$opers = [];
+		foreach ($this->clients as $client){
+			if ($client['user_type'] == 'operator') {
+				$opers[] = $client;
+			}
+		}
+        return $opers;
+    }
+
+	/**
 	 * Summary. Busca un cliente por su objeto socket.
 	 * @param $socket: Recurso del socket del cliente.
 	 * @return array $client: Cliente encontrado.
@@ -123,7 +136,7 @@ class Handler {
 		foreach($clientArr as $client)
 		{			
 			echo "\n enviando \n";
-			@socket_write($client['socket'],$message, $$messageLength);
+			@socket_write($client['socket'],$message, $messageLength);
 		}
 		return true;
 	}
@@ -260,13 +273,9 @@ class Handler {
 	}
 	
 	//esto crea mensajes... deberia ser adaptado a la solicitud de prestamo, claramente.
-	function createUserMessage($chat_user,$chat_box_message,$chat_box_user_id, $chat_operator_id = null){
-		$message = $chat_user . ": <div class='chat-box-message'>" . $chat_box_message . "</div>";
-		$messageArray = array('message'=>$message,'message_type'=>'chat-box-html');
-		$chatMessage = $this->seal(json_encode($messageArray));
-	
+	function createUserMessage($chat_user,$chat_box_message,$chat_box_user_id){	
 		$message = $chat_user . ": <div class='chat-box-message'>" . $chat_box_message . "
-									<button type='button'  onclick='replyTo()' class='reply btn btn-outline-success' data-operator='$chat_operator_id' data-id='$chat_box_user_id'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-send-fill' viewBox='0 0 16 16'>
+									<button type='button'  onclick='replyTo()' class='reply btn btn-outline-success' data-reply='$chat_box_user_id'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-send-fill' viewBox='0 0 16 16'>
   <path d='M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471z'/>
 </svg>
 </button>
@@ -279,11 +288,12 @@ class Handler {
 
 	//esto crea mensajes... deberia ser adaptado a la solicitud de prestamo, claramente.
 	function createOperMessage($chat_user,$chat_box_message,$chat_box_user_id){
-		$message = $chat_user . ": <div class='chat-box-message'>" . $chat_box_message . "</div>";
-		$messageArray = array('message'=>$message,'message_type'=>'chat-box-html');
-		$chatMessage = $this->seal(json_encode($messageArray));
-	
-		$message = $chat_user . ": <div class='chat-box-message'>" . $chat_box_message . "</div>";
+		$message = $chat_user . ": <div class='chat-box-message'>" . $chat_box_message .
+		 "<button type='button'  onclick='replyTo()' class='reply btn btn-outline-success' data-reply='$chat_box_user_id'>
+		 	<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-send-fill' viewBox='0 0 16 16'>
+		 	  	<path d='M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471z'/>
+		 	</svg>
+		 </button></div>";
 		$messageArray = array('message'=>$message,'message_type'=>'chat-box-html');
 		$chatMessage = $this->seal(json_encode($messageArray));
 		return $chatMessage;

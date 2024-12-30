@@ -70,45 +70,33 @@ while ($running) {
         if ($bytesReceived > 0) {
             $socketMessage = $handler->unseal($socketData);
             $messageObj = json_decode($socketMessage);
-
-            //Mensaje usuario
-			if(isset($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id)){
-                //echo "Menssssaje recibido: " . $messageObj->chat_message . PHP_EOL;
-                //echo "usuario recibido: " . $messageObj->chat_user . PHP_EOL;
-                //echo "id recibido: " . $messageObj->chat_user_id . PHP_EOL;
-
-				if(gettype($messageObj->chat_user_id) == 'string' && $messageObj->chat_user_id == 'all'){
-				    $chat_box_message = $handler->createOperMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id);
-                    $handler->sendToAll($chat_box_message);
-                }else{
-                    if(isset($messageObj->chat_operator_id)){
-                        $chat_box_message = $handler->createUserMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id, $messageObj->chat_operator_id);
+            print_r($messageObj);
+           if(isset($messageObj->chat_message) && $messageObj->chat_message == 'operator-list'){
+                $operadores = $handler->getOpers();
+                $messageObj->message = 'operator-list';
+                $messageObj->operators = $operadores;
+                $messageObj->chat_message = 'Operadores disponibles';
+                $handler->send($chat_box_message);
+            }else{
+                if(isset($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id)){
+                    if(gettype($messageObj->chat_user_id) == 'string' && $messageObj->chat_user_id == 'all'){
+                        $chat_box_message = $handler->createOperMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id);
+                        $handler->sendToAll($chat_box_message);
                     }else{
-                        $chat_box_message = $handler->createUserMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id);
+                        if(isset($messageObj->chat_operator_id)){
+                            $chat_box_message = $handler->createUserMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id, $messageObj->chat_operator_id);
+                        }else{
+                            $chat_box_message = $handler->createUserMessage($messageObj->chat_user, $messageObj->chat_message, $messageObj->chat_user_id);
+                        }
+                        if(isset($messageObj->chat_userType) && $messageObj->chat_userType != 'operator'){
+                            $handler->send($chat_box_message); //operador 
+                        }else{
+                            $handler->sendToMyself($chat_box_message,$clientSocket); //usuario (el mismo)
+                        }	
+                        $handler->sendTo($chat_box_message,$messageObj->chat_user_id); //usuario (el mismo)
                     }
-                    if(isset($messageObj->chat_userType) && $messageObj->chat_userType != 'operator'){
-                        $handler->send($chat_box_message); //operador 
-                    }else{
-                        $handler->sendToMyself($chat_box_message,$clientSocket); //usuario (el mismo)
-                    }	
-                    $handler->sendTo($chat_box_message,$messageObj->chat_user_id); //usuario (el mismo)
                 }
-                
-				echo "Mensaje recibido: " . $chat_box_message . PHP_EOL;
-			}
-
-            //mensaje operador
-			
-			
-
-			// ///responder a un solo usuario (porque sino se lo manda a todos)
-			// if(isset($messageObj->chat_user, $messageObj->chat_response, $messageObj->chat_user_id)){
-			// 	$chat_box_message = $handler->createChatBoxMessage($messageObj->chat_user, $messageObj->chat_response);
-			// 	$handler->sendTo($chat_box_message, $messageObj->chat_user_id);
-			// 	echo "respuesta para ". $messageObj->chat_user_id ." recibido: " . $chat_box_message . PHP_EOL;
-			// }
-
-
+           }
         } elseif ($bytesReceived === 0 || $socketData === false) {
             //Desconectar cliente
             socket_getpeername($clientSocket, $client_ip_address);

@@ -1,6 +1,6 @@
 DESCRIPCION:
 Conjunto de archivos para un chat/envío de mensajes a través de websockets.
-Socket original por: (link acá)
+Socket original por: https://phppot.com/php/simple-php-chat-using-websocket/
 
 php-socket.php -> Inicia el servidor websocket (ejecutar con php [nombreArchivo])
 
@@ -33,7 +33,9 @@ Lo ideal sería finalizarle la conversación al usuario que está en el array $c
 y avisarle de eso.
 
 
-¿Progreso?
+Progreso
 El websocket es funcional.
 Se pueden entablar mensajes entre operadores/usuarios.
-
+    - La cardinalidad usuario-operador es: 1..n (1 usuario envia 1 mensaje a n operadores)
+    - La cardinalidad operador-usuario es: 1..1 (1 operador responde 1 mensaje a 1 usuario)
+    - Reintentar conección cliente/servior
