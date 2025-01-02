@@ -32,8 +32,20 @@ Por el momento el servidor websocket es g e n e r a l... por lo que no "iniciamo
 Lo ideal sería finalizarle la conversación al usuario que está en el array $clients en memoria en el handler
 y avisarle de eso.
 
+ACTUALIZACION 2025-01-02 ACTUALIZACION 2025-01-02 ACTUALIZACION 2025-01-02 ACTUALIZACION 2025-01-02 ACTUALIZACION 2025-01-02
 
-¿Progreso?
-El websocket es funcional.
-Se pueden entablar mensajes entre operadores/usuarios.
+Vistas basadas en tablas.
+Usuario que defino como "operador" se conecta a una vista (index), acepta/rechaza el prestamo.
 
+Usuaro que defino como "cliente" se conecta a una vista (client). y cuando se conecta; automaticamente 
+genera un prestamo (a fines de simulacion)
+
+Se genera el prestamo en bd, y se dispara un mensaje por websocket para actualizar ese listado (en base a la BD)
+Operador rechaza/acepta el prestamo.
+y dispara lo siguiente:
+    dispara mensaje que es devuelto al cliente, actualiza el estado de su vista. 
+    dispara mensaje para actualizar el listado de solicitudes del operador.
+
+El mensaje de actualización de listado es general, TODOS los usuarios lo reciben (se muestre o no)
+El mensaje de aceptacion/rechazo de préstamo es "privado", lo recibe solo el usuario que disparó la solicitud
+de prestamo. sinó... todos los usuarios se les cancelaria/aceptaria el prestamo (ver como darle mas seguridad a esto).

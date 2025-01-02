@@ -50,14 +50,15 @@ while ($running) {
 
         $clientSocketArray[] = $newSocket;
         $header = socket_read($newSocket, 1024);
-        $handler->doHandshake($header, $newSocket, HOST_NAME, PORT);
-		
         
-        socket_getpeername($newSocket, $client_ip_address);
-        $connectionACK = $handler->newConnectionACK($client_ip_address);
-        echo $connectionACK . PHP_EOL;
-        
-        $handler->send($connectionACK);
+        if($handler->doHandshake($header, $newSocket, HOST_NAME, PORT)){
+            socket_getpeername($newSocket, $client_ip_address);
+            $connectionACK = $handler->newConnectionACK($client_ip_address);
+            echo "Handshake Performed " . PHP_EOL;
+            $handler->send($connectionACK);
+
+        }
+   
         unset($newSocketArray[array_search($socketResource, $newSocketArray)]);
     }
     
@@ -70,8 +71,32 @@ while ($running) {
         if ($bytesReceived > 0) {
             $socketMessage = $handler->unseal($socketData);
             $messageObj = json_decode($socketMessage);
-            //Mensaje publico
-			var_dump($messageObj);
+
+            if(isset($messageObj->message)){
+                echo "Mensaje recibido " .  $messageObj->message ."\n";
+            }
+
+            
+            if(isset($messageObj->message_type) && $messageObj->message_code == "P00A"){
+                $operaPrestamo = new operaPrestamo();
+                if($operaPrestamo->aceptar($messageObj->userid)){
+                    $prestamoClient = $handler->getClientBy('user_id', $messageObj->userid);
+                    $handler->send_to_self($handler->seal(json_encode(array("message_type"=>"system", "message_code" => "P00A","message"=>"Prestamo aceptado."))),$prestamoClient);
+                    $handler->updateListadoPrestamo();
+                }
+                unset($operaPrestamo);
+            }
+
+            if(isset($messageObj->message_type) && $messageObj->message_code == "P00R"){
+                var_dump($messageObj->userid);
+                $operaPrestamo = new operaPrestamo();
+                if($operaPrestamo->rechazar($messageObj->userid)){
+                    $prestamoClient = $handler->getClientBy('user_id', $messageObj->userid);
+                    $handler->send_to_self($handler->seal(json_encode(array("message_type"=>"system", "message_code" => "P00R","message"=>"Prestamo rechazado."))),$prestamoClient);
+                    $handler->updateListadoPrestamo();
+                }
+                unset($operaPrestamo);
+            }
 
 
         } elseif ($bytesReceived === 0 || $socketData === false) {
