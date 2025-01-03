@@ -77,22 +77,22 @@ while ($running) {
             }
 
             
-            if(isset($messageObj->message_type) && $messageObj->message_code == "P00A"){
+            if(isset($messageObj->message_type) && $messageObj->message_code == "P00A" && isset($messageObj->message_extra) && !empty($messageObj->message_extra)){
                 $operaPrestamo = new operaPrestamo();
                 if($operaPrestamo->aceptar($messageObj->userid)){
                     $prestamoClient = $handler->getClientBy('user_id', $messageObj->userid);
-                    $handler->send_to_self($handler->seal(json_encode(array("message_type"=>"system", "message_code" => "P00A","message"=>"Prestamo aceptado."))),$prestamoClient);
+                    $handler->send_to_self($handler->seal(json_encode(array("message_type"=>"system", "message_code" => "P00A", "message_extra" => $messageObj->message_extra,"message"=>"Prestamo aceptado."))),$prestamoClient);
                     $handler->updateListadoPrestamo();
                 }
                 unset($operaPrestamo);
             }
 
-            if(isset($messageObj->message_type) && $messageObj->message_code == "P00R"){
+            if(isset($messageObj->message_type) && $messageObj->message_code == "P00R" && isset($messageObj->message_extra) && !empty($messageObj->message_extra)){ 
                 var_dump($messageObj->userid);
                 $operaPrestamo = new operaPrestamo();
                 if($operaPrestamo->rechazar($messageObj->userid)){
                     $prestamoClient = $handler->getClientBy('user_id', $messageObj->userid);
-                    $handler->send_to_self($handler->seal(json_encode(array("message_type"=>"system", "message_code" => "P00R","message"=>"Prestamo rechazado."))),$prestamoClient);
+                    $handler->send_to_self($handler->seal(json_encode(array("message_type"=>"system", "message_code" => "P00R", "message_extra" => $messageObj->message_extra,"message"=>"Prestamo rechazado."))),$prestamoClient);
                     $handler->updateListadoPrestamo();
                 }
                 unset($operaPrestamo);

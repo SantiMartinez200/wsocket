@@ -6,22 +6,51 @@ function showRow(messageHTML) {
 
 
 function aceptar(websocket,userid){
-    
-    websocket.send(JSON.stringify({message_code: 'P00A', message_type: 'loan-accept',message: 'Aceptar Prestamo', userid: userid}));
+    let chatbox = document.getElementById("chat-box");
+    let inputReason = document.createElement('input');
+    inputReason.type = 'text';
+    inputReason.placeholder = 'Motivo';
+    inputReason.id = 'reason';
+    inputReason.required = true;
+    chatbox.appendChild(inputReason);
+    let button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Aceptar';
+    chatbox.appendChild(button);
+    button.addEventListener('click', () => {
+        if(inputReason.value === ''){
+            return alert('Debe ingresar un motivo');
+        }
+        websocket.send(JSON.stringify({message_code: 'P00A', message_type: 'loan-accept',message: 'Aceptar Prestamo', message_extra:inputReason.value ,userid: userid}));
+    })
 }
 
 function rechazar(websocket,userid){
-    
-    websocket.send(JSON.stringify({message_code: 'P00R', message_type: 'loan-reject',message: 'Rechazar Prestamo', userid: userid}));
+    let chatbox = document.getElementById("chat-box");
+    let inputReason = document.createElement('input');
+    inputReason.type = 'text';
+    inputReason.placeholder = 'Motivo';
+    inputReason.id = 'reason';
+    inputReason.required = true;
+    chatbox.appendChild(inputReason);
+    let button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Rechazar';
+    chatbox.appendChild(button);
+    button.addEventListener('click', () => {
+        if(inputReason.value === ''){
+            return alert('Debe ingresar un motivo');
+        }
+        websocket.send(JSON.stringify({message_code: 'P00R', message_type: 'loan-reject',message: 'Rechazar Prestamo', message_extra:inputReason.value ,userid: userid}));
+    })
 }
 
 
 function identify() {
-    var name = 'OPERADOR';
     var user_type = "oper";
     var message = "watch";
     
-    const url = `ws://localhost:8090/php-socket.php?username=${encodeURIComponent(name)}&usertype=${encodeURIComponent(user_type)}&message=${encodeURIComponent(message)}`;
+    const url = `ws://localhost:8090/php-socket.php?usertype=${encodeURIComponent(user_type)}&message=${encodeURIComponent(message)}`;
 
     const websocket = new WebSocket(url);
             websocket.onopen = function (event) {

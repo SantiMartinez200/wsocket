@@ -5,11 +5,10 @@ function showRow(messageHTML) {
 }
 
 function identify() {
-    var name = 'santiago';
     var user_type = "user";
     var message = "peticion";
     
-    const url = `ws://localhost:8090/php-socket.php?username=${encodeURIComponent(name)}&usertype=${encodeURIComponent(user_type)}&message=${encodeURIComponent(message)}`;
+    const url = `ws://localhost:8090/php-socket.php?usertype=${encodeURIComponent(user_type)}&message=${encodeURIComponent(message)}`;
 
     const websocket = new WebSocket(url);
             websocket.onopen = function (event) {
@@ -23,10 +22,10 @@ function identify() {
                     showRow("<div class='row'><div class='col-md-12'><div class='alert alert-info' role='alert'>"+data.message+"</div></div></div>");
                 }
                 if(data.message_code == 'P00A'){
-                    showRow("<div class='row'><div class='col-md-12'><div class='alert alert-info' role='alert'>"+data.message+"</div></div></div>");
+                    showRow("<div class='row'><div class='col-md-12'><div class='alert alert-info' role='alert'>"+data.message+" Razon: "+data.message_extra+"</div></div></div>");
                 }
                 if(data.message_code == 'P00R'){
-                    showRow("<div class='row'><div class='col-md-12'><div class='alert alert-info' role='alert'>"+data.message+"</div></div></div>");
+                    showRow("<div class='row'><div class='col-md-12'><div class='alert alert-info' role='alert'>"+data.message+" Razon: "+data.message_extra+"</div></div></div>");
                 }
             };
 

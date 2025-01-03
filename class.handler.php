@@ -15,7 +15,8 @@ class Handler {
 		try{
 			$conn = new PDO("mysql:host=$this->servername;dbname=$this->dbname", $this->username, $this->password);
 			$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-			$sql = "INSERT INTO prestamos (userid, confirmado) VALUES ('$client_id', '$estado')";
+			//$sql = "INSERT INTO prestamos (userid, confirmado) VALUES ('$client_id', '$estado')";
+			$sql = "INSERT INTO backend_solicitudes (id, estado) VALUES ('$client_id', '$estado')";
 			$conn->exec($sql);
 		}catch(PDOException $e){
 			echo "Connection failed: " . $e->getMessage();
@@ -135,7 +136,7 @@ class Handler {
 			if ($client['socket'] === $socket) {
 				$client[$key] = $value;
 				if($key === 'user_type' && $value === 'user') {
-					if($this->registrarPrestamo($client['user_id'], 'PEND')){
+					if($this->registrarPrestamo($client['user_id'], 'HOLD')){
 						$messageArray = array('message'=>'Prestamo pendiente','message_code'=>'P001','message_type'=>'pending-loan');
 						$ACK = $this->seal(json_encode($messageArray));
 						$this->send_to_self($ACK,$socket);
@@ -294,7 +295,6 @@ class Handler {
 		}
 		
 
-		$username = $queryParams['username'] ?? 'Unknown';
 		$usertype = $queryParams['usertype'] ?? 'Unknown';
 		$message = $queryParams['message'] ?? 'Unknown';
 
@@ -309,7 +309,6 @@ class Handler {
 
 		socket_getpeername($client_socket_resource, $client_ip_address);
 		$this->registerClient($client_socket_resource, $client_ip_address);
-		$this->updateClientMetadata($client_socket_resource, 'username', $username);
 		$this->updateClientMetadata($client_socket_resource, 'user_type', $usertype);
 		$this->updateClientMetadata($client_socket_resource, 'message', $message);
 
