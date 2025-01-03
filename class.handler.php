@@ -11,20 +11,27 @@ class Handler {
 	 * Summary. Registra un préstamo en la base de datos.
 	 * @return bool true: Si se registró el préstamo, false caso contrario
 	 */
-	function registrarPrestamo($client_id, $estado) {
-		try{
-			$conn = new PDO("mysql:host=$this->servername;dbname=$this->dbname", $this->username, $this->password);
-			$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-			//$sql = "INSERT INTO prestamos (userid, confirmado) VALUES ('$client_id', '$estado')";
-			$sql = "INSERT INTO backend_solicitudes (id, estado) VALUES ('$client_id', '$estado')";
-			$conn->exec($sql);
-		}catch(PDOException $e){
-			echo "Connection failed: " . $e->getMessage();
-			return false;
-		}
+	// function registrarPrestamo($client_id, $estado) {
+	// 	try{
+	// 		$conn = new PDO("mysql:host=$this->servername;dbname=$this->dbname", $this->username, $this->password);
+	// 		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	// 		//tenemos que verificar si no existe un prestamo antes
+	// 		 $sqlGetPrestamo = "SELECT COUNT(*) as `rowCount` FROM prestamos WHERE `userid` = $client_id AND `confirmado` = 'PEND'";
+	// 		 //var_dump($sqlGetPrestamo);
+	// 		 $stmt = $conn->query($sqlGetPrestamo);
+	// 		 $rowCount = $stmt->fetchColumn();
+	// 		 if($rowCount > 0){
+	// 			return true;
+	// 		 }
+	// 		$sql = "INSERT INTO prestamos (userid, confirmado) VALUES ('$client_id', '$estado')";
+	// 		$conn->exec($sql);
+	// 	}catch(PDOException $e){
+	// 		echo "Connection failed: " . $e->getMessage();
+	// 		return false;
+	// 	}
 
-		return true;
-	}
+	// 	return true;
+	// }
 
 	function getPrestamo(){
 		try{
@@ -46,14 +53,13 @@ class Handler {
 
 	/**
 	 * Summary. Buscar un cliente por algun valor (Tener en cuenta que, esto está hecho en memoria)
-	 * @param $key: Llave de la metadata a buscar.
 	 * @param $value: Valor de la metadata a buscar.
 	 * @return array $socketClient: Objeto Socket del cliente encontrado.
 	 */
 
-	 public function getClientBy($key, $value) {
+	 public function getClientById($value) {
 		foreach ($this->clients as $client) {
-			if ($client[$key] === $value) {
+			if ($client['user_id'] == $value) {
 				return $client['socket'];
 			}
 		}
@@ -72,7 +78,7 @@ class Handler {
             'socket' => $socket,
             'ip' => $ip,
             'user_type' => null, // Tipo de usuario... podemos cambiarlo por otra cosa o eliminar esto.
-            'user_id' => uniqid(), // ID's temporales en memoria.
+            'user_id' => 1  //uniqid(), // ID's temporales en memoria.
         ];
     }
 
@@ -135,25 +141,11 @@ class Handler {
 		foreach ($this->clients as &$client) {
 			if ($client['socket'] === $socket) {
 				$client[$key] = $value;
-				if($key === 'user_type' && $value === 'user') {
-					if($this->registrarPrestamo($client['user_id'], 'HOLD')){
-						$messageArray = array('message'=>'Prestamo pendiente','message_code'=>'P001','message_type'=>'pending-loan');
-						$ACK = $this->seal(json_encode($messageArray));
-						$this->send_to_self($ACK,$socket);
-						//Si suponemos que el websocket es solamente para recibir el listado de prestamos y aceptarlos/rechazarlos
-						//entonces, le mandamos el listado de prestamos a    l o s   operadores
-						$prestamos = $this->getPrestamo();
-						$messageArray = array('message'=>$prestamos,'message_code'=>'P002','message_type'=>'loan-list');
-						$ACK = $this->seal(json_encode($messageArray));
-						$this->send($ACK);
-
-					}
-				}
-				if($key === 'user_type' && $value === 'oper') {
+				if($key === 'user_type' && !empty($value)){
 					$prestamos = $this->getPrestamo();
 					$messageArray = array('message'=>$prestamos,'message_code'=>'P002','message_type'=>'loan-list');
 					$ACK = $this->seal(json_encode($messageArray));
-					$this->send_to_self($ACK,$socket); //porque lo tiene que recibir este operador cuando se conecte
+					$this->send($ACK);
 				}
 				return true;
 			}
@@ -174,20 +166,8 @@ class Handler {
 		foreach($clientSocketArray as $clientSocket) {
 			if(@socket_write($clientSocket, $msg, strlen($msg)))
 			{
-				echo "msg enviado\n";
-				var_dump($this->getClients());	
-			}
-		}
-
-		if(is_array($msg) && array_key_exists('message_type',$msg) && $msg['message_type'] == 'loan-list'){
-			//Si el mensaje es de tipo loan-list, entonces, se envia a los operadores
-			foreach($clientSocketArray as $clientSocket) {
-				if($this->getClientBySocket($clientSocket)['user_type'] === 'oper'){
-					if(@socket_write($clientSocket, $msg['message_type'], strlen($msg['message_type'])))
-					{
-						echo "msg enviado a operadores\n";
-					}
-				}
+				echo "\n Send enviado \n";
+				//var_dump($this->getClients());	
 			}
 		}
 		return true;
@@ -200,10 +180,15 @@ class Handler {
 	 * return bool true: Si se envió el mensaje, false caso contrario.
 	 */
 	function send_to_self($msg,$client_socket) {
-		global $clientSocketArray;
+		//global $clientSocketArray;
+		$clients = $this->getClients();
+		var_dump($client_socket);
+		
+		var_dump($clients);
+		
 		//var_dump($clientSocketArray);
-		foreach($clientSocketArray as $clientSocket) {
-			if($clientSocket == $client_socket){
+		foreach($clients as $client) {
+			if($client['socket'] == $client_socket){
 				if(@socket_write($client_socket, $msg, strlen($msg)))
 				{
 					echo "\n msg enviado al cliente \n";
@@ -295,8 +280,6 @@ class Handler {
 		}
 		
 
-		$usertype = $queryParams['usertype'] ?? 'Unknown';
-		$message = $queryParams['message'] ?? 'Unknown';
 
 		// Proceed with handshake response
 		$buffer  = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" .
@@ -307,9 +290,16 @@ class Handler {
 			"Sec-WebSocket-Accept:$secAccept\r\n\r\n";
 		socket_write($client_socket_resource, $buffer, strlen($buffer));
 
+		$usertype = $queryParams['usertype'] ?? 'Unknown';
+		$message = $queryParams['message'] ?? 'Unknown';
+
 		socket_getpeername($client_socket_resource, $client_ip_address);
 		$this->registerClient($client_socket_resource, $client_ip_address);
 		$this->updateClientMetadata($client_socket_resource, 'user_type', $usertype);
+		//para probar
+		if($usertype == 'oper'){			
+			$this->updateClientMetadata($client_socket_resource, 'user_id', 2);
+		}
 		$this->updateClientMetadata($client_socket_resource, 'message', $message);
 
 

@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Clase simulada para aceptar/rechazar préstamos, sera reemplazada con el ajax correspondiente.
+ */
 class operaPrestamo {
     public $servername = "localhost";
 	public $username = "root";
@@ -15,6 +17,7 @@ class operaPrestamo {
 
     public function aceptar($userid){
         $conn = $this->connect();
+        //echo "ACEPTANDO";
         $sql = "UPDATE prestamos SET confirmado = 'SI' WHERE userid = '$userid'";
         if($conn->exec($sql)){
             return true;
@@ -23,6 +26,7 @@ class operaPrestamo {
 
     public function rechazar($userid){
         $conn = $this->connect();
+        //echo "RECHAZANDO";
         $sql = "UPDATE prestamos SET confirmado = 'NO' WHERE userid = '$userid'";
         if($conn->exec($sql)){
             return true;
